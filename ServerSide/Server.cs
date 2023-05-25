@@ -2,13 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading;
 
 namespace ServerSide
 {
     class Server
     {
         private NetServer _server;
-        private Dictionary<NetConnection, int> playerPositions = new Dictionary<NetConnection, int>();
+        private Dictionary<NetConnection, Vector2> playerPositions = new Dictionary<NetConnection, Vector2>();
+        private object positionsLock = new object(); // Lock for playerPositions
 
         static void Main(string[] args)
         {
@@ -28,6 +30,35 @@ namespace ServerSide
 
             Console.WriteLine("Server started");
 
+            // Start a new thread to handle incoming messages
+            Thread incomingMessageThread = new Thread(new ThreadStart(HandleIncomingMessages));
+            incomingMessageThread.Start();
+
+            while (true)
+            {
+                lock (positionsLock)  // Lock the dictionary while iterating
+                {
+                    foreach (var player in playerPositions)
+                    {
+                        if (player.Key.Status == NetConnectionStatus.Connected)
+                        {
+                            foreach (var otherPlayer in playerPositions)
+                            {
+                                var msg = _server.CreateMessage();
+                                msg.Write(otherPlayer.Key.RemoteUniqueIdentifier);
+                                msg.Write(otherPlayer.Value.X);
+                                msg.Write(otherPlayer.Value.Y);
+                                _server.SendMessage(msg, player.Key, NetDeliveryMethod.ReliableOrdered);
+                            }
+                        }
+                    }
+                }
+                Thread.Sleep(10);  // Give other threads a chance to run
+            }
+        }
+
+        private void HandleIncomingMessages()
+        {
             while (true)
             {
                 var message = _server.ReadMessage();
@@ -37,37 +68,36 @@ namespace ServerSide
                     switch (message.MessageType)
                     {
                         case NetIncomingMessageType.ConnectionApproval:
-                            playerPositions[message.SenderConnection] = 0;
+                            lock (positionsLock)
+                            {
+                                playerPositions[message.SenderConnection] = Vector2.Zero;
+                            }
                             message.SenderConnection.Approve();
                             break;
                         case NetIncomingMessageType.Data:
                             string command = message.ReadString();
-                            if (command == "MOVE_LEFT")
-                                playerPositions[message.SenderConnection]--;
-                            else if (command == "MOVE_RIGHT")
-                                playerPositions[message.SenderConnection]++;
-                            else if (command == "MOVE_UP") 
-                                playerPositions[message.SenderConnection] += 10;
-                            else if (command == "MOVE_DOWN")
-                                playerPositions[message.SenderConnection] -= 10;
-                            else
-                                Console.WriteLine($"Unhandled command {command}");
+                            lock (positionsLock)
+                            {
+                                Console.WriteLine("Received command: " + command);
+                                if (command == "MOVE_LEFT")
+                                    playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X - 1, playerPositions[message.SenderConnection].Y);
+                                else if (command == "MOVE_RIGHT")
+                                    playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X + 1, playerPositions[message.SenderConnection].Y);
+                                else if (command == "MOVE_UP") 
+                                    playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X, playerPositions[message.SenderConnection].Y - 1);
+                                else if (command == "MOVE_DOWN")
+                                    playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X, playerPositions[message.SenderConnection].Y + 1);
+                            }
                             break;
                         case NetIncomingMessageType.StatusChanged:
                             if ((NetConnectionStatus)message.ReadByte() == NetConnectionStatus.Disconnected)
-                                playerPositions.Remove(message.SenderConnection);
+                            {
+                                lock (positionsLock)
+                                {
+                                    playerPositions.Remove(message.SenderConnection);
+                                }
+                            }
                             break;
-                        default:
-                            Console.WriteLine("Unhandled message type");
-                            break;
-                    }
-
-                    foreach (var player in playerPositions)
-                    {
-                        var msg = _server.CreateMessage();
-                        msg.Write(player.Key.RemoteUniqueIdentifier);
-                        msg.Write(player.Value);
-                        _server.SendMessage(msg, message.SenderConnection, NetDeliveryMethod.ReliableOrdered);
                     }
                 }
             }
