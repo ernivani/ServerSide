@@ -4857,23 +4857,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\tlind\\.nuget\\packages\\": {},
+    "C:\\Users\\tlind_ly20i0c\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tlind\\RiderProjects\\ServerSide\\ServerSide\\ServerSide.csproj",
+      "projectUniqueName": "C:\\Users\\tlind_ly20i0c\\OneDrive\\Bureau\\dev\\ServerSide\\ServerSide\\ServerSide.csproj",
       "projectName": "ServerSide",
-      "projectPath": "C:\\Users\\tlind\\RiderProjects\\ServerSide\\ServerSide\\ServerSide.csproj",
-      "packagesPath": "C:\\Users\\tlind\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tlind\\RiderProjects\\ServerSide\\ServerSide\\obj\\",
+      "projectPath": "C:\\Users\\tlind_ly20i0c\\OneDrive\\Bureau\\dev\\ServerSide\\ServerSide\\ServerSide.csproj",
+      "packagesPath": "C:\\Users\\tlind_ly20i0c\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\tlind_ly20i0c\\OneDrive\\Bureau\\dev\\ServerSide\\ServerSide\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\tlind\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\tlind_ly20i0c\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
