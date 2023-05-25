@@ -8,7 +8,6 @@ namespace ServerSide
     class Server
     {
         private NetServer _server;
-        // create a dictionary all the players and a vector2 for their position
         private Dictionary<NetConnection, int> playerPositions = new Dictionary<NetConnection, int>();
 
         static void Main(string[] args)
