@@ -1,8 +1,5 @@
 ﻿using Lidgren.Network;
-using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Threading;
 
 namespace ServerSide
 {
@@ -14,6 +11,8 @@ namespace ServerSide
 
         static void Main(string[] args)
         {
+            Console.WriteLine("Starting server...");
+            Console.WriteLine(args.Length);
             var server = new Server();
             server.Run();
         }
@@ -87,6 +86,14 @@ namespace ServerSide
                                     playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X, playerPositions[message.SenderConnection].Y - 1);
                                 else if (command == "MOVE_DOWN")
                                     playerPositions[message.SenderConnection] = new Vector2(playerPositions[message.SenderConnection].X, playerPositions[message.SenderConnection].Y + 1);
+                                else if (command == "MOVE_TO")
+                                {
+                                    float x = message.ReadFloat();
+                                    float y = message.ReadFloat();
+                                    Console.WriteLine("Moving to: " + x + ", " + y);
+                                    Vector2 position = new Vector2(x, y);
+                                    playerPositions[message.SenderConnection] = position;
+                                }
                             }
                             break;
                         case NetIncomingMessageType.StatusChanged:
