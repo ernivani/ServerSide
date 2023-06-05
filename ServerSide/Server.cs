@@ -1,51 +1,59 @@
 ﻿using System;
-using Lidgren.Network;
 using System.Collections.Generic;
+using Lidgren.Network;
+using System.Numerics;
 
 namespace ServerSide
 {
+    public class Player
+    {
+        public long Id { get; private set; }
+        public Vector2 Position { get; set; }
+
+        public Player(long id, Vector2 position)
+        {
+            this.Id = id;
+            this.Position = position;
+        }
+    }
+
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            NetPeerConfiguration config = new NetPeerConfiguration("game") { Port = 9999 };
-            NetServer server = new NetServer(config);
+            var config = new NetPeerConfiguration("game") { Port = 9999 };
+            var server = new NetServer(config);
             server.Start();
-            Console.WriteLine("Server started");
 
-            Dictionary<long, (float, float)> playerPositions = new Dictionary<long, (float, float)>();
+            var players = new Dictionary<long, Player>();
+
+            Console.WriteLine("Server started...");
 
             while (true)
             {
                 NetIncomingMessage inc;
                 while ((inc = server.ReadMessage()) != null)
                 {
-                    switch (inc.MessageType)
+                    if (inc.MessageType == NetIncomingMessageType.Data)
                     {
-                        case NetIncomingMessageType.Data:
-                            string message = inc.ReadString();
-                            if (message == "MOVE_TO")
-                            {
-                                float x = inc.ReadFloat();
-                                float y = inc.ReadFloat();
-                                Console.WriteLine($"Player {inc.SenderConnection.RemoteUniqueIdentifier} moved to {x}, {y}");
-                                playerPositions[inc.SenderConnection.RemoteUniqueIdentifier] = (x, y);
+                        var id = inc.ReadInt64();
+                        var pos = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
-                                // Send updated player positions to all clients
-                                foreach (var connection in server.Connections)
-                                {
-                                    var outMessage = server.CreateMessage();
-                                    outMessage.Write(inc.SenderConnection.RemoteUniqueIdentifier);
-                                    outMessage.Write(x);
-                                    outMessage.Write(y);
-                                    server.SendMessage(outMessage, connection, NetDeliveryMethod.ReliableOrdered);
-                                }
-                            }
-                            break;
+                        if (!players.TryGetValue(id, out Player player))
+                        {
+                            player = new Player(id, pos);
+                            players.Add(id, player);
+                            Console.WriteLine($"New player {id} connected.");
+                        }
 
-                        default:
-                            break;
+                        player.Position = pos;
+
+                        foreach (var p in players.Values)
+                        {
+                            Console.WriteLine($"Player {p.Id}: {p.Position.X}, {p.Position.Y}");
+                        }
                     }
+
                     server.Recycle(inc);
                 }
             }
